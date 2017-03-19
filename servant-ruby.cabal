@@ -22,7 +22,7 @@ library
                      , servant-foreign >= 0.9 && < 0.10
                      , text >= 1.2 && < 1.3
   default-language:    Haskell2010
-  ghc-options:         -Wall -Werror
+  ghc-options:         -Wall
 
 test-suite doc-test
   type:                exitcode-stdio-1.0
