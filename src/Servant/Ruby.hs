@@ -202,7 +202,7 @@ ruby (NameSpace {..}) p =
   api =
     listFromAPI (Proxy :: Proxy NoTypes) (Proxy :: Proxy NoContent) p
   prologue =
-    ((\(i, n) -> T.replicate i "  " <> "module " <> n)<$> zip [0..] moduleNames)
+    ((\(i, n) -> T.replicate i "  " <> "module " <> n) <$> zip [0..] moduleNames)
     ++ [T.replicate indent "  " <> "class " <> className]
   epilogue =
     reverse $ (\i -> T.replicate i "  " <> "end") <$> [0..indent]
@@ -216,9 +216,14 @@ imports =
   , "require \"uri\""
   , ""
   ]
+
+properIndent :: Functor f => Int -> f (Maybe Text) -> f Text
+properIndent indent =
+  fmap (maybe "" (T.replicate (indent + 1) "  " <>))
+
 initialize :: Int -> [Text]
 initialize indent =
-  fmap (maybe "" (T.replicate (indent + 1) "  " <>))
+  properIndent indent
     [ Just "def initialize(origin)"
     , Just "  @origin = URI(origin)"
     , Just "  @http = Net::HTTP.new(@origin.host, @origin.port)"
@@ -227,7 +232,7 @@ initialize indent =
 
 private :: Int -> [Text]
 private indent =
-  fmap (maybe "" (T.replicate (indent + 1) "  " <>))
+  properIndent indent
     [ Nothing
     , Just "private"
     , Nothing
@@ -240,7 +245,7 @@ private indent =
 
 public :: Int -> Req NoContent -> [Text]
 public indent req =
-  fmap (maybe "" (T.replicate (indent + 1) "  " <>)) $
+  properIndent indent $
     [ Nothing
     , Just $ "def " <> functionName <> "(" <> argsStr <> ")"
     , Just $ "  uri = URI(" <> url <> ")"
@@ -255,31 +260,26 @@ public indent req =
     ]
   where
   functionName :: Text
-  functionName =
-    req ^. reqFuncName.snakeCaseL.to snake
+  functionName = req ^. reqFuncName.snakeCaseL.to snake
 
   argsStr  :: Text
-  argsStr =
-      T.intercalate ", " $ snake <$> args
+  argsStr = T.intercalate ", " $ snake <$> args
 
   args :: [Text]
   args =
     captures
-    ++ (view (queryArgName.argPath) <$> queryparams)
+    ++ ((^. queryArgName.argPath) <$> queryparams)
     ++ body
     ++ headerArgs
 
   segments :: [Segment NoContent]
-  segments =
-    req ^. reqUrl.path^..folded.filtered isCapture
+  segments = req ^. reqUrl.path^..folded.filtered isCapture
 
   queryparams :: [QueryArg NoContent]
-  queryparams =
-    req ^.. reqUrl.queryStr.traverse
+  queryparams = req ^.. reqUrl.queryStr.traverse
 
   captures :: [Text]
-  captures =
-    view argPath . captureArg <$> segments
+  captures = view argPath . captureArg <$> segments
 
   body :: [Text]
   body =
@@ -294,8 +294,7 @@ public indent req =
       Nothing -> "(req)"
 
   accept :: [Maybe Text]
-  accept =
-    [Just "  req[\"Accept\"] = \"application/json\""]
+  accept = [Just "  req[\"Accept\"] = \"application/json\""]
 
   contentType :: [Maybe Text]
   contentType =
@@ -304,8 +303,7 @@ public indent req =
       Nothing -> []
 
   hs :: [HeaderArg NoContent]
-  hs =
-    req ^. reqHeaders
+  hs = req ^. reqHeaders
 
   requestHeaders :: [Maybe Text]
   requestHeaders =
@@ -314,12 +312,10 @@ public indent req =
     ++ (requestHeader <$> rawHeaders)
 
   headerArgs :: [Text]
-  headerArgs =
-    (<> ":") <$> rawHeaders
+  headerArgs = (<> ":") <$> rawHeaders
 
   rawHeaders :: [Text]
-  rawHeaders =
-    (^. headerArg.argName._PathSegment) <$> hs
+  rawHeaders = (^. headerArg.argName._PathSegment) <$> hs
 
   method :: Text
   method =
@@ -328,12 +324,10 @@ public indent req =
       Left _  -> "Get"
 
   url :: Text
-  url =
-    "\"#{origin}" <> urlArgs <> queryArgs <> "\""
+  url = "\"#{origin}" <> urlArgs <> queryArgs <> "\""
 
   urlArgs :: Text
-  urlArgs =
-    req ^.. reqUrl.path.traverse & rbSegments
+  urlArgs = req ^.. reqUrl.path.traverse & rbSegments
 
   queryArgs :: Text
   queryArgs =
@@ -343,8 +337,7 @@ public indent req =
       "?" <> rbParams "&" queryparams
 
 requestHeader :: Text -> Maybe Text
-requestHeader header =
-  Just $ "  req[\"" <> header <> "\"] = " <> snake header
+requestHeader header = Just $ "  req[\"" <> header <> "\"] = " <> snake header
 
 rbSegments :: [Segment f] -> Text
 rbSegments []     = ""
@@ -352,14 +345,11 @@ rbSegments [x]    = "/" <> segmentToStr x
 rbSegments (x:xs) = "/" <> segmentToStr x <> rbSegments xs
 
 segmentToStr :: Segment f -> Text
-segmentToStr (Segment st) =
-  segmentTypeToStr st
+segmentToStr (Segment st) = segmentTypeToStr st
 
 segmentTypeToStr :: SegmentType f -> Text
-segmentTypeToStr (Static s) =
-  s ^. _PathSegment
-segmentTypeToStr (Cap s)    =
-  "#{" <> s ^. argName._PathSegment <> "}"
+segmentTypeToStr (Static s) = s ^. _PathSegment
+segmentTypeToStr (Cap s)    = "#{" <> s ^. argName._PathSegment <> "}"
 
 rbParams :: Text -> [QueryArg f] -> Text
 rbParams _ []     = ""
@@ -377,5 +367,4 @@ paramToStr qarg =
   val = snake key
 
 snake :: Text -> Text
-snake =
-  T.pack . quietSnake . T.unpack
+snake = T.pack . quietSnake . T.unpack
