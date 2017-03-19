@@ -24,6 +24,14 @@ library
   default-language:    Haskell2010
   ghc-options:         -Wall -Werror
 
+test-suite doc-test
+  type:                exitcode-stdio-1.0
+  main-is:             Main.hs
+  hs-source-dirs:      test
+  build-depends:       base
+                     , Cabal >= 1.24 && < 1.25
+                     , doctest >= 0.11 && < 0.12
+
 source-repository head
   type:     git
   location: https://github.com/joneshf/servant-ruby
