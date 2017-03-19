@@ -95,20 +95,11 @@ class Baz
   end
 <BLANKLINE>
   def get()
-    uri = URI("#{origin}")
+    uri = URI("#{@origin}")
 <BLANKLINE>
     req = Net::HTTP::Get.new(uri)
-    req["Accept"] = "application/json"
 <BLANKLINE>
-    request(req)
-  end
-<BLANKLINE>
-  private
-<BLANKLINE>
-  def request(req, body = nil)
-    res = http.request(req, body)
-    res.body = JSON.parse(res.body, symbolize_names: true)
-    res
+    @http.request(req)
   end
 end
 
@@ -128,20 +119,11 @@ module Foo
       end
 <BLANKLINE>
       def get()
-        uri = URI("#{origin}")
+        uri = URI("#{@origin}")
 <BLANKLINE>
         req = Net::HTTP::Get.new(uri)
-        req["Accept"] = "application/json"
 <BLANKLINE>
-        request(req)
-      end
-<BLANKLINE>
-      private
-<BLANKLINE>
-      def request(req, body = nil)
-        res = http.request(req, body)
-        res.body = JSON.parse(res.body, symbolize_names: true)
-        res
+        @http.request(req)
       end
     end
   end
@@ -164,22 +146,13 @@ class Foo
   end
 <BLANKLINE>
   def post_foo_by_foo_id(foo_id, bar, body:, max_forwards:)
-    uri = URI("#{origin}/foo/#{fooId}?bar=#{bar}")
+    uri = URI("#{@origin}/foo/#{fooId}?bar=#{bar}")
 <BLANKLINE>
     req = Net::HTTP::Post.new(uri)
-    req["Accept"] = "application/json"
     req["Content-Type"] = "application/json"
     req["Max-Forwards"] = max_forwards
 <BLANKLINE>
-    request(req, body)
-  end
-<BLANKLINE>
-  private
-<BLANKLINE>
-  def request(req, body = nil)
-    res = http.request(req, body)
-    res.body = JSON.parse(res.body, symbolize_names: true)
-    res
+    @http.request(req, body)
   end
 end
 -}
@@ -198,7 +171,6 @@ ruby (NameSpace {..}) p =
   body =
     initialize indent
     ++ foldMap (public indent) api
-    ++ private indent
   api =
     listFromAPI (Proxy :: Proxy NoTypes) (Proxy :: Proxy NoContent) p
   prologue =
@@ -230,19 +202,6 @@ initialize indent =
     , Just "end"
     ]
 
-private :: Int -> [Text]
-private indent =
-  properIndent indent
-    [ Nothing
-    , Just "private"
-    , Nothing
-    , Just "def request(req, body = nil)"
-    , Just "  res = http.request(req, body)"
-    , Just "  res.body = JSON.parse(res.body, symbolize_names: true)"
-    , Just "  res"
-    , Just "end"
-    ]
-
 public :: Int -> Req NoContent -> [Text]
 public indent req =
   properIndent indent $
@@ -255,7 +214,7 @@ public indent req =
     ++ requestHeaders
     ++
     [ Nothing
-    , Just $ "  request" <> request
+    , Just $ "  @http.request" <> request
     , Just "end"
     ]
   where
@@ -293,9 +252,6 @@ public indent req =
       Just _  -> "(req, body)"
       Nothing -> "(req)"
 
-  accept :: [Maybe Text]
-  accept = [Just "  req[\"Accept\"] = \"application/json\""]
-
   contentType :: [Maybe Text]
   contentType =
     case req ^. reqBody of
@@ -307,8 +263,7 @@ public indent req =
 
   requestHeaders :: [Maybe Text]
   requestHeaders =
-    accept
-    ++ contentType
+    contentType
     ++ (requestHeader <$> rawHeaders)
 
   headerArgs :: [Text]
@@ -324,7 +279,7 @@ public indent req =
       Left _  -> "Get"
 
   url :: Text
-  url = "\"#{origin}" <> urlArgs <> queryArgs <> "\""
+  url = "\"#{@origin}" <> urlArgs <> queryArgs <> "\""
 
   urlArgs :: Text
   urlArgs = req ^.. reqUrl.path.traverse & rbSegments
