@@ -12,6 +12,7 @@ category:            Servant, Web
 build-type:          Simple
 extra-source-files:  README.md
 cabal-version:       >=1.10
+tested-with:         GHC == 7.10.1, GHC == 7.10.2, GHC == 7.10.3, GHC == 8.0.1, GHC == 8.0.2
 
 library
   hs-source-dirs:      src
@@ -30,8 +31,8 @@ test-suite doc-test
   main-is:             Main.hs
   hs-source-dirs:      test
   build-depends:       base
-                     , Cabal >= 1.24 && < 1.25
                      , doctest >= 0.11 && < 0.12
+  default-language:    Haskell2010
 
 source-repository head
   type:     git
