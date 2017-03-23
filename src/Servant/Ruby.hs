@@ -15,9 +15,8 @@ Stability: Experimental
 
 module Servant.Ruby (NameSpace(..), ruby) where
 
-import Control.Lens (filtered, folded, to, view, (^.), (^..))
+import Control.Lens (filtered, folded, to, view, (^.), (^..), (&))
 
-import Data.Function ((&))
 import Data.Monoid ((<>))
 import Data.Proxy (Proxy(Proxy))
 import Data.Text (Text)
