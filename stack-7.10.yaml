@@ -1,0 +1,13 @@
+flags: {}
+extra-package-dbs: []
+packages:
+- '.'
+extra-deps:
+- casing-0.1.1.0
+- http-api-data-0.3.5
+- kan-extensions-5.0.1
+- lens-4.15.1
+- natural-transformation-0.4
+- servant-0.10
+- servant-foreign-0.10
+resolver: lts-6.30
