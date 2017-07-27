@@ -132,7 +132,7 @@ Captures and query parameters are translated into required arguments, in that or
 
 The request body and headers are translated into keyword arguments, in that order.
 
->>> let api = Proxy :: Proxy ("foo" :> Capture "fooId" Int :> ReqBody '[JSON] () :> QueryParam "bar" Bool :> Header "Max-Forwards" Int :> Post '[JSON] ())
+>>> let api = Proxy :: Proxy ("foo" :> Capture "fooId" Int :> ReqBody '[JSON] () :> QueryParam "barId" Bool :> Header "Max-Forwards" Int :> Post '[JSON] ())
 >>> Data.Text.IO.putStr $ ruby (NameSpace [] "Foo") api
 require "json"
 require "net/http"
@@ -144,8 +144,8 @@ class Foo
     @http = Net::HTTP.new(@origin.host, @origin.port)
   end
 <BLANKLINE>
-  def post_foo_by_foo_id(foo_id, bar, body:, max_forwards:)
-    uri = URI("#{@origin}/foo/#{fooId}?bar=#{bar}")
+  def post_foo_by_foo_id(foo_id, bar_id, body:, max_forwards:)
+    uri = URI("#{@origin}/foo/#{foo_id}?barId=#{bar_id}")
 <BLANKLINE>
     req = Net::HTTP::Post.new(uri)
     req["Content-Type"] = "application/json"
@@ -303,7 +303,7 @@ segmentToStr (Segment st) = segmentTypeToStr st
 
 segmentTypeToStr :: SegmentType f -> Text
 segmentTypeToStr (Static s) = s ^. _PathSegment
-segmentTypeToStr (Cap s)    = "#{" <> s ^. argName._PathSegment <> "}"
+segmentTypeToStr (Cap s)    = "#{" <> s ^. argName._PathSegment.to snake <> "}"
 
 rbParams :: Text -> [QueryArg f] -> Text
 rbParams _ []     = ""
