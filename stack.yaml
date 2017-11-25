@@ -4,4 +4,4 @@ packages:
 - '.'
 extra-deps:
 - casing-0.1.1.0
-resolver: lts-8.5
+resolver: nightly-2017-11-25
