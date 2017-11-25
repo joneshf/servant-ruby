@@ -1,5 +1,5 @@
 name:                servant-ruby
-version:             0.3.0.0
+version:             0.4.0.0
 synopsis:            Generate a Ruby client from a Servant API with Net::HTTP.
 description:         Generate a Ruby client from a Servant API with Net::HTTP.
 homepage:            https://github.com/joneshf/servant-ruby#readme
