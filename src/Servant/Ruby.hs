@@ -16,9 +16,9 @@ Stability: Experimental
 
 module Servant.Ruby (NameSpace(..), ruby) where
 
+import Control.Applicative (Const(Const, getConst))
 import Data.Foldable (toList)
 import Data.Function ((&))
-import Data.Functor.Const (Const(Const, getConst))
 import Data.Monoid (Endo(Endo, appEndo), (<>))
 import Data.Proxy (Proxy(Proxy))
 import Data.Text (Text)
