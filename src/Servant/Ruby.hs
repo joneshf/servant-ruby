@@ -1,6 +1,7 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE RecordWildCards #-}
 
 {-|
@@ -15,9 +16,10 @@ Stability: Experimental
 
 module Servant.Ruby (NameSpace(..), ruby) where
 
-import Control.Lens (filtered, folded, to, view, (^.), (^..), (&))
-
-import Data.Monoid ((<>))
+import Control.Applicative (Const(Const, getConst))
+import Data.Foldable (toList)
+import Data.Function ((&))
+import Data.Monoid (Endo(Endo, appEndo), (<>))
 import Data.Proxy (Proxy(Proxy))
 import Data.Text (Text)
 import Data.Text.Encoding (decodeUtf8')
@@ -231,7 +233,9 @@ public indent req =
     ++ headerArgs
 
   segments :: [Segment NoContent]
-  segments = req ^. reqUrl.path^..folded.filtered isCapture
+  segments = filter isCapture paths
+    where
+    paths = toList (req ^. reqUrl.path)
 
   queryparams :: [QueryArg NoContent]
   queryparams = req ^.. reqUrl.queryStr.traverse
@@ -325,3 +329,27 @@ prop> \str -> snake (snake $ T.pack str) == snake (T.pack str)
 -}
 snake :: Text -> Text
 snake = T.pack . quietSnake . T.unpack
+
+-- optics
+
+to :: (s -> a) -> Getting a s a
+to f a2fa s = s <$ (a2fa $ f s)
+{-# INLINE to #-}
+
+view :: Getting a s a -> s -> a
+view s2a s = getConst (s2a Const s)
+{-# INLINE view #-}
+
+infixl 8 ^.
+
+(^.) :: s -> Getting a s a -> a
+x ^. l = view l x
+{-# INLINE (^.) #-}
+
+infixl 8 ^..
+
+(^..) :: s -> Getting (Endo [a]) s a -> [a]
+x ^.. l = appEndo (getConst $ l (Const . Endo . (:)) x) []
+{-# INLINE (^..) #-}
+
+type Getting r s a = (a -> Const r a) -> s -> Const r s
