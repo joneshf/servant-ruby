@@ -11,6 +11,15 @@ before_cache:
   - rm -fv $HOME/.cabal/packages/hackage.haskell.org/build-reports.log
   - rm -fv $HOME/.cabal/packages/hackage.haskell.org/00-index.tar
 
+deploy:
+  - on:
+      repo: joneshf/servant-ruby
+      tags: true
+    password:
+      secure: 0IPARARzN1q0pLlvDhjBnsHK54KqWKT74SiSTW6j8YQiBI9eVKALB9MH+RYC1XrbWbGYplBq3e/PCnJ4P1/iew1hHzQgMflm1ATpjCwgNnDGe93neB1TdRHDM2ubsYldzXnmvYJCf1FH/Vgd1Hnuibu3CcOMBYE1qajQJ2AkC/mIksKS2MHiWe14/JJsYvCDfy1EQ6ynxPq49FOmV7xCCzg2hZ5xkatSAanwyEPNDy7OQizpKmF5v+KB7ddiZsHv2BOgpWiCyjhUHWz2ahtzL4b3zxUnbyI9gPvmeeUt7gyRAFM9efd/0sLKYUuUfwwwHBtiUeIv7e6J4SZk5930N4IgT85/ZnbaYBy/g5TkdCHLanc9imew1MFJm5gU+VBU380xVnhTLIqj4tLRssDqkhknM/3gPkDOwzGBe0DnGjKFbvwYK+CozvOXS8Lt/BA1qZP2yLGYNpPevI++sZMRStA2r0VsEnsSWB/RRicPL3sJYexq6QCCcaOifbC9x+FEzMfCHhBL3iTB/KvcMioJxdkdDIj+lqI0TaQ3iVBfWfehX6ub6v7BxaSAeWIjp/SLX27NcfAYh5Y0DLwXUHIFLyxV0zydSzqXWS/EHUJcE9refeVU6Z555OKNngaPg+YWuSJmeX4T+zzacIDI6LfPTjIEwtBy/xCmNgZ2CuWobFA=
+    provider: hackage
+    username: joneshf
+
 matrix:
   include:
     - env: CABALVER=1.22 GHCVER=7.10.3
