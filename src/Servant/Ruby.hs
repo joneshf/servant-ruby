@@ -324,9 +324,6 @@ paramToStr qarg =
   key = qarg ^. queryArgName.argName._PathSegment
   val = snake key
 
-{-|
-prop> \str -> snake (snake $ T.pack str) == snake (T.pack str)
--}
 snake :: Text -> Text
 snake = T.pack . quietSnake . T.unpack
 
