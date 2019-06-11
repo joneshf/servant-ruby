@@ -147,6 +147,7 @@ class Foo
   end
 <BLANKLINE>
   def post_foo_by_foo_id(foo_id, bar_id, body:, max_forwards:)
+    foo_id = if foo_id.kind_of?(Array) then foo_id.join(',') else foo_id end
     uri = URI("#{@origin}/foo/#{foo_id}?barId=#{bar_id}")
 <BLANKLINE>
     req = Net::HTTP::Post.new(uri)
