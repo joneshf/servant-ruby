@@ -230,7 +230,18 @@ public indent req =
   cleanCaptures = cleanCapture . snake <$> captures
 
   cleanCapture  :: Text -> Text
-  cleanCapture c = "  " <> c <> " = if " <> c <> ".kind_of?(Array) then " <> c <> ".join(',') else " <> c <> " end"
+  cleanCapture c =
+    T.concat
+      [ "  "
+      , c
+      , " = if "
+      , c
+      , ".kind_of?(Array) then "
+      , c
+      , ".join(',') else "
+      , c
+      , " end"
+      ]
 
   argsStr  :: Text
   argsStr = T.intercalate ", " $ snake <$> args
