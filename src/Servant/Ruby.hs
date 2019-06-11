@@ -227,13 +227,12 @@ public indent req =
   functionName = req ^. reqFuncName.snakeCaseL.to snake
 
   cleanCaptures  :: [Text]
-  cleanCaptures = cleanCapture . snake <$> captures
+  cleanCaptures = (<>) "  " . cleanCapture . snake <$> captures
 
   cleanCapture  :: Text -> Text
   cleanCapture c =
     T.concat
-      [ "  "
-      , c
+      [ c
       , " = if "
       , c
       , ".kind_of?(Array) then "
