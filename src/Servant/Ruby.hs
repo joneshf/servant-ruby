@@ -209,7 +209,10 @@ public indent req =
   properIndent indent $
     [ Nothing
     , Just $ "def " <> functionName <> "(" <> argsStr <> ")"
-    , Just $ "  uri = URI(" <> url <> ")"
+    ]
+    ++ (Just <$> cleanCaptures)
+    ++
+    [ Just $ "  uri = URI(" <> url <> ")"
     , Nothing
     , Just $ "  req = Net::HTTP::" <> method <> ".new(uri)"
     ]
@@ -222,6 +225,12 @@ public indent req =
   where
   functionName :: Text
   functionName = req ^. reqFuncName.snakeCaseL.to snake
+
+  cleanCaptures  :: [Text]
+  cleanCaptures = cleanCapture . snake <$> captures
+
+  cleanCapture  :: Text -> Text
+  cleanCapture c = "  " <> c <> " = if " <> c <> ".kind_of?(Array) then " <> c <> ".join(',') else " <> c <> " end"
 
   argsStr  :: Text
   argsStr = T.intercalate ", " $ snake <$> args
