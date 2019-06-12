@@ -95,10 +95,12 @@ class Baz
     @http = Net::HTTP.new(@origin.host, @origin.port)
   end
 <BLANKLINE>
-  def get()
-    uri = URI("#{@origin}")
+  def get_uri()
+    URI("#{@origin}")
+  end
 <BLANKLINE>
-    req = Net::HTTP::Get.new(uri)
+  def get()
+    req = Net::HTTP::Get.new(get_uri())
 <BLANKLINE>
     @http.request(req)
   end
@@ -119,10 +121,12 @@ module Foo
         @http = Net::HTTP.new(@origin.host, @origin.port)
       end
 <BLANKLINE>
-      def get()
-        uri = URI("#{@origin}")
+      def get_uri()
+        URI("#{@origin}")
+      end
 <BLANKLINE>
-        req = Net::HTTP::Get.new(uri)
+      def get()
+        req = Net::HTTP::Get.new(get_uri())
 <BLANKLINE>
         @http.request(req)
       end
@@ -146,10 +150,12 @@ class Foo
     @http = Net::HTTP.new(@origin.host, @origin.port)
   end
 <BLANKLINE>
-  def post_foo_by_foo_id(foo_id, bar_id, body:, max_forwards:)
-    uri = URI("#{@origin}/foo/#{foo_id}?barId=#{bar_id}")
+  def post_foo_by_foo_id_uri(foo_id, bar_id)
+    URI("#{@origin}/foo/#{foo_id}?barId=#{bar_id}")
+  end
 <BLANKLINE>
-    req = Net::HTTP::Post.new(uri)
+  def post_foo_by_foo_id(foo_id, bar_id, body:, max_forwards:)
+    req = Net::HTTP::Post.new(post_foo_by_foo_id_uri(foo_id, bar_id))
     req["Content-Type"] = "application/json"
     req["Max-Forwards"] = max_forwards
 <BLANKLINE>
@@ -207,10 +213,12 @@ public :: Int -> Req NoContent -> [Text]
 public indent req =
   properIndent indent $
     [ Nothing
-    , Just $ "def " <> functionName <> "(" <> argsStr <> ")"
-    , Just $ "  uri = URI(" <> url <> ")"
+    , Just $ "def " <> functionName <> "_uri(" <> argsStr <> ")"
+    , Just $ "  URI(" <> url <> ")"
+    , Just "end"
     , Nothing
-    , Just $ "  req = Net::HTTP::" <> method <> ".new(uri)"
+    , Just $ "def " <> functionName <> "(" <> allArgsStr <> ")"
+    , Just $ "  req = Net::HTTP::" <> method <> ".new(" <> functionName <> "_uri(" <> argsStr <> "))"
     ]
     ++ requestHeaders
     ++
@@ -225,12 +233,14 @@ public indent req =
   argsStr  :: Text
   argsStr = T.intercalate ", " $ snake <$> args
 
+  allArgsStr  :: Text
+  allArgsStr = T.intercalate ", " $ snake <$> (args ++ bodyAndHeader)
+
   args :: [Text]
-  args =
-    captures
-    ++ ((^. queryArgName.argPath) <$> queryparams)
-    ++ body
-    ++ headerArgs
+  args = captures ++ ((^. queryArgName.argPath) <$> queryparams)
+
+  bodyAndHeader :: [Text]
+  bodyAndHeader = body ++ headerArgs
 
   segments :: [Segment NoContent]
   segments = filter isCapture paths
