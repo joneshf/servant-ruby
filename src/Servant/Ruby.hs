@@ -166,6 +166,8 @@ class Foo
   end
 <BLANKLINE>
   def post_foo_by_foo_id_uri(foo_id, bar_id, ids)
+    foo_id = if foo_id.kind_of?(Array) then foo_id.join(',') else foo_id end
+<BLANKLINE>
     URI("#{@origin}/foo/#{foo_id}?barId=#{bar_id}&#{ ids.collect { |x| 'ids[]=' + x.to_s }.join('&') }")
   end
 <BLANKLINE>
@@ -236,7 +238,10 @@ public indent req =
   properIndent indent $
     [ Nothing
     , Just $ "def " <> functionName <> "_uri(" <> argsStr <> ")"
-    , Just $ "  URI(" <> url <> ")"
+    ]
+    ++ cleanCaptures
+    ++
+    [ Just $ "  URI(" <> url <> ")"
     , Just "end"
     , Nothing
     , Just $ "def " <> functionName <> "(" <> allArgsStr <> ")"
