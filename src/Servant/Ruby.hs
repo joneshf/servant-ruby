@@ -90,9 +90,14 @@ require "net/http"
 require "uri"
 <BLANKLINE>
 class Baz
-  def initialize(origin)
+  def initialize(origin, timeout = nil)
     @origin = URI(origin)
     @http = Net::HTTP.new(@origin.host, @origin.port)
+<BLANKLINE>
+    unless timeout.nil?
+      @http.open_timeout = timeout
+      @http.read_timeout = timeout
+    end
   end
 <BLANKLINE>
   def get_uri()
@@ -116,9 +121,14 @@ require "uri"
 module Foo
   module Bar
     class Baz
-      def initialize(origin)
+      def initialize(origin, timeout = nil)
         @origin = URI(origin)
         @http = Net::HTTP.new(@origin.host, @origin.port)
+<BLANKLINE>
+        unless timeout.nil?
+          @http.open_timeout = timeout
+          @http.read_timeout = timeout
+        end
       end
 <BLANKLINE>
       def get_uri()
@@ -145,9 +155,14 @@ require "net/http"
 require "uri"
 <BLANKLINE>
 class Foo
-  def initialize(origin)
+  def initialize(origin, timeout = nil)
     @origin = URI(origin)
     @http = Net::HTTP.new(@origin.host, @origin.port)
+<BLANKLINE>
+    unless timeout.nil?
+      @http.open_timeout = timeout
+      @http.read_timeout = timeout
+    end
   end
 <BLANKLINE>
   def post_foo_by_foo_id_uri(foo_id, bar_id, ids)
@@ -205,9 +220,14 @@ properIndent indent =
 initialize :: Int -> [Text]
 initialize indent =
   properIndent indent
-    [ Just "def initialize(origin)"
+    [ Just "def initialize(origin, timeout = nil)"
     , Just "  @origin = URI(origin)"
     , Just "  @http = Net::HTTP.new(@origin.host, @origin.port)"
+    , Nothing
+    , Just "  unless timeout.nil?"
+    , Just "    @http.open_timeout = timeout"
+    , Just "    @http.read_timeout = timeout"
+    , Just "  end"
     , Just "end"
     ]
 
