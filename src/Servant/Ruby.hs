@@ -98,6 +98,7 @@ class Baz
       @http.open_timeout = timeout
       @http.read_timeout = timeout
     end
+    @http.use_ssl = @origin.scheme == 'https'
   end
 <BLANKLINE>
   def get_uri()
@@ -129,6 +130,7 @@ module Foo
           @http.open_timeout = timeout
           @http.read_timeout = timeout
         end
+        @http.use_ssl = @origin.scheme == 'https'
       end
 <BLANKLINE>
       def get_uri()
@@ -163,6 +165,7 @@ class Foo
       @http.open_timeout = timeout
       @http.read_timeout = timeout
     end
+    @http.use_ssl = @origin.scheme == 'https'
   end
 <BLANKLINE>
   def post_foo_by_foo_id_uri(foo_id, bar_id, ids)
@@ -230,6 +233,7 @@ initialize indent =
     , Just "    @http.open_timeout = timeout"
     , Just "    @http.read_timeout = timeout"
     , Just "  end"
+    , Just "  @http.use_ssl = @origin.scheme == 'https'"
     , Just "end"
     ]
 
