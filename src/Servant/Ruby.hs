@@ -93,6 +93,7 @@ class Baz
   def initialize(origin)
     @origin = URI(origin)
     @http = Net::HTTP.new(@origin.host, @origin.port)
+    @http.use_ssl = @origin.scheme == 'https'
   end
 <BLANKLINE>
   def get()
@@ -117,6 +118,7 @@ module Foo
       def initialize(origin)
         @origin = URI(origin)
         @http = Net::HTTP.new(@origin.host, @origin.port)
+        @http.use_ssl = @origin.scheme == 'https'
       end
 <BLANKLINE>
       def get()
@@ -144,6 +146,7 @@ class Foo
   def initialize(origin)
     @origin = URI(origin)
     @http = Net::HTTP.new(@origin.host, @origin.port)
+    @http.use_ssl = @origin.scheme == 'https'
   end
 <BLANKLINE>
   def post_foo_by_foo_id(foo_id, bar_id, body:, max_forwards:)
@@ -200,6 +203,7 @@ initialize indent =
     [ Just "def initialize(origin)"
     , Just "  @origin = URI(origin)"
     , Just "  @http = Net::HTTP.new(@origin.host, @origin.port)"
+    , Just "  @http.use_ssl = @origin.scheme == 'https'"
     , Just "end"
     ]
 
