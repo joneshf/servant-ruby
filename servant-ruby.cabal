@@ -27,7 +27,7 @@ library
 test-suite doc-test
   type:                exitcode-stdio-1.0
   main-is:             Main.hs
-  hs-source-dirs:      test
+  hs-source-dirs:      test/doc
   build-depends:       base
                      , doctest >= 0.11
                      , QuickCheck >= 2.9
