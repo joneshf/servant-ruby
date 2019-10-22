@@ -17,7 +17,7 @@ module Generated
       end
 
       def get_uri(beetle)
-        URI("#{@origin}?beetle")
+        URI("#{@origin}?#{beetle ? 'beetle' : ''}")
       end
 
       def get(beetle)
