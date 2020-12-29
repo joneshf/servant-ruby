@@ -252,7 +252,7 @@ public indent req =
     ]
     ++ cleanCaptures
     ++
-    [ Just $ "  req = Net::HTTP::" <> method <> ".new(" <> functionName <> "_uri(" <> argsStr <> "))"
+    [ Just $ "  req = Net::HTTP::" <> method <> ".new(" <> functionName <> "_uri(" <> callArgsStr <> "))"
     ]
     ++ requestHeaders
     ++
@@ -286,16 +286,22 @@ public indent req =
       ]
 
   argsStr  :: Text
-  argsStr = T.intercalate ", " $ snake <$> args
+  argsStr = T.intercalate ", " args
+
+  callArgsStr  :: Text
+  callArgsStr = T.intercalate ", " callArgs
+
+  callArgs :: [Text]
+  callArgs = captures ++ (paramToCallArg <$> queryparams)
 
   allArgsStr  :: Text
-  allArgsStr = T.intercalate ", " $ snake <$> (args ++ bodyAndHeader)
+  allArgsStr = T.intercalate ", " (args ++ bodyAndHeader)
 
   args :: [Text]
-  args = captures ++ ((^. queryArgName.argPath) <$> queryparams)
+  args = captures ++ (paramToArg <$> queryparams)
 
   bodyAndHeader :: [Text]
-  bodyAndHeader = body ++ headerArgs
+  bodyAndHeader = snake <$> (body ++ headerArgs)
 
   segments :: [Segment NoContent]
   segments = filter isCapture paths
@@ -306,7 +312,7 @@ public indent req =
   queryparams = req ^.. reqUrl.queryStr.traverse
 
   captures :: [Text]
-  captures = view argPath . captureArg <$> segments
+  captures = fmap snake $ view argPath . captureArg <$> segments
 
   body :: [Text]
   body =
@@ -388,6 +394,24 @@ paramToStr qarg =
   where
   key = qarg ^. queryArgName.argName._PathSegment
   val = snake key
+
+paramToArg :: QueryArg f -> Text
+paramToArg qarg =
+  case qarg ^. queryArgType of
+    Normal -> snake name
+    Flag   -> snake name <> ": false"
+    List   -> snake name
+  where
+  name = qarg ^. queryArgName.argPath
+
+paramToCallArg :: QueryArg f -> Text
+paramToCallArg qarg =
+  case qarg ^. queryArgType of
+    Normal -> snake name
+    Flag   -> snake name <> ": " <> snake name
+    List   -> snake name
+  where
+  name = qarg ^. queryArgName.argPath
 
 snake :: Text -> Text
 snake = T.pack . quietSnake . T.unpack
