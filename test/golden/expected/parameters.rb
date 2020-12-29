@@ -1,6 +1,8 @@
-require "json"
-require "net/http"
-require "uri"
+# frozen_string_literal: true
+
+require 'json'
+require 'net/http'
+require 'uri'
 
 module Generated
   module V1
@@ -17,13 +19,13 @@ module Generated
       end
 
       def get_by_butterfly_uri(butterfly)
-        butterfly = if butterfly.kind_of?(Array) then butterfly.join(',') else butterfly end
+        butterfly = butterfly.is_a?(Array) ? butterfly.join(',') : butterfly
 
         URI("#{@origin}/#{butterfly}")
       end
 
       def get_by_butterfly(butterfly)
-        butterfly = if butterfly.kind_of?(Array) then butterfly.join(',') else butterfly end
+        butterfly = butterfly.is_a?(Array) ? butterfly.join(',') : butterfly
 
         req = Net::HTTP::Get.new(get_by_butterfly_uri(butterfly))
 

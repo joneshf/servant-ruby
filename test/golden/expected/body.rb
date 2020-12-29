@@ -1,6 +1,8 @@
-require "json"
-require "net/http"
-require "uri"
+# frozen_string_literal: true
+
+require 'json'
+require 'net/http'
+require 'uri'
 
 module Generated
   module V1
@@ -16,13 +18,13 @@ module Generated
         @http.use_ssl = @origin.scheme == 'https'
       end
 
-      def post_uri()
-        URI("#{@origin}")
+      def post_uri
+        URI(@origin.to_s)
       end
 
       def post(body:)
-        req = Net::HTTP::Post.new(post_uri())
-        req["Content-Type"] = "application/json"
+        req = Net::HTTP::Post.new(post_uri)
+        req['Content-Type'] = 'application/json'
 
         @http.request(req, body)
       end
