@@ -39,7 +39,7 @@ type QueryParamApi = QueryParam "spider" () :> Get '[JSON] ()
 
 type QueryParamsApi = QueryParams "spiders" () :> Get '[JSON] ()
 
-type QueryFlagApi = QueryFlag "beetle" :> Get '[JSON] ()
+type QueryFlagApi = QueryFlag "vw-beetle" :> Get '[JSON] ()
 
 test
   :: (GenerateList NoContent (Foreign NoContent api), HasForeign NoTypes NoContent api)

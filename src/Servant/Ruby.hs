@@ -389,7 +389,7 @@ paramToStr :: QueryArg f -> Text
 paramToStr qarg =
   case qarg ^. queryArgType of
     Normal -> key <> "=#{" <> val <> "}"
-    Flag   -> "#{" <> key <> " ? '" <> key <> "' : ''}"
+    Flag   -> "#{" <> snake key <> " ? '" <> key <> "' : ''}"
     List   -> "#{ " <> val <> ".collect { |x| '" <> key <> "[]=' + x.to_s }.join('&') }"
   where
   key = qarg ^. queryArgName.argName._PathSegment
