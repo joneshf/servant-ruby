@@ -7,13 +7,24 @@ module Main where
 
 import Data.ByteString.Lazy (ByteString)
 import Data.Proxy (Proxy(Proxy))
+import Data.Text.Lazy (fromStrict)
+import Data.Text.Lazy.Encoding (encodeUtf8)
+import Servant.API
+  ( (:>)
+  , Capture
+  , Get
+  , Header
+  , JSON
+  , Post
+  , QueryFlag
+  , QueryParam
+  , QueryParams
+  , ReqBody
+  )
+import Servant.Foreign (Foreign, GenerateList, HasForeign, NoContent, NoTypes)
+import Servant.Ruby (NameSpace(NameSpace), ruby)
 import Test.Tasty (defaultMain, testGroup)
 import Test.Tasty.Golden (goldenVsString)
-import Servant.API ((:>), Get, Post, JSON, Capture, Header, ReqBody, QueryParam, QueryParams, QueryFlag)
-import Servant.Ruby (ruby, NameSpace(NameSpace))
-import Data.Text.Lazy.Encoding (encodeUtf8)
-import Data.Text.Lazy (fromStrict)
-import Servant.Foreign (GenerateList, NoContent, Foreign, HasForeign, NoTypes)
 
 main :: IO ()
 main = defaultMain $ testGroup "golden tests"
