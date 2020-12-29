@@ -90,15 +90,23 @@ require "net/http"
 require "uri"
 <BLANKLINE>
 class Baz
-  def initialize(origin)
+  def initialize(origin, timeout = nil)
     @origin = URI(origin)
     @http = Net::HTTP.new(@origin.host, @origin.port)
+<BLANKLINE>
+    unless timeout.nil?
+      @http.open_timeout = timeout
+      @http.read_timeout = timeout
+    end
+    @http.use_ssl = @origin.scheme == 'https'
+  end
+<BLANKLINE>
+  def get_uri()
+    URI("#{@origin}")
   end
 <BLANKLINE>
   def get()
-    uri = URI("#{@origin}")
-<BLANKLINE>
-    req = Net::HTTP::Get.new(uri)
+    req = Net::HTTP::Get.new(get_uri())
 <BLANKLINE>
     @http.request(req)
   end
@@ -114,15 +122,23 @@ require "uri"
 module Foo
   module Bar
     class Baz
-      def initialize(origin)
+      def initialize(origin, timeout = nil)
         @origin = URI(origin)
         @http = Net::HTTP.new(@origin.host, @origin.port)
+<BLANKLINE>
+        unless timeout.nil?
+          @http.open_timeout = timeout
+          @http.read_timeout = timeout
+        end
+        @http.use_ssl = @origin.scheme == 'https'
+      end
+<BLANKLINE>
+      def get_uri()
+        URI("#{@origin}")
       end
 <BLANKLINE>
       def get()
-        uri = URI("#{@origin}")
-<BLANKLINE>
-        req = Net::HTTP::Get.new(uri)
+        req = Net::HTTP::Get.new(get_uri())
 <BLANKLINE>
         @http.request(req)
       end
@@ -134,22 +150,34 @@ Captures and query parameters are translated into required arguments, in that or
 
 The request body and headers are translated into keyword arguments, in that order.
 
->>> let api = Proxy :: Proxy ("foo" :> Capture "fooId" Int :> ReqBody '[JSON] () :> QueryParam "barId" Bool :> Header "Max-Forwards" Int :> Post '[JSON] ())
+>>> let api = Proxy :: Proxy ("foo" :> Capture "fooId" Int :> ReqBody '[JSON] () :> QueryParam "barId" Bool :> QueryParams "ids" Int :> Header "Max-Forwards" Int :> Post '[JSON] ())
 >>> Data.Text.IO.putStr $ ruby (NameSpace [] "Foo") api
 require "json"
 require "net/http"
 require "uri"
 <BLANKLINE>
 class Foo
-  def initialize(origin)
+  def initialize(origin, timeout = nil)
     @origin = URI(origin)
     @http = Net::HTTP.new(@origin.host, @origin.port)
+<BLANKLINE>
+    unless timeout.nil?
+      @http.open_timeout = timeout
+      @http.read_timeout = timeout
+    end
+    @http.use_ssl = @origin.scheme == 'https'
   end
 <BLANKLINE>
-  def post_foo_by_foo_id(foo_id, bar_id, body:, max_forwards:)
-    uri = URI("#{@origin}/foo/#{foo_id}?barId=#{bar_id}")
+  def post_foo_by_foo_id_uri(foo_id, bar_id, ids)
+    foo_id = if foo_id.kind_of?(Array) then foo_id.join(',') else foo_id end
 <BLANKLINE>
-    req = Net::HTTP::Post.new(uri)
+    URI("#{@origin}/foo/#{foo_id}?barId=#{bar_id}&#{ ids.collect { |x| 'ids[]=' + x.to_s }.join('&') }")
+  end
+<BLANKLINE>
+  def post_foo_by_foo_id(foo_id, bar_id, ids, body:, max_forwards:)
+    foo_id = if foo_id.kind_of?(Array) then foo_id.join(',') else foo_id end
+<BLANKLINE>
+    req = Net::HTTP::Post.new(post_foo_by_foo_id_uri(foo_id, bar_id, ids))
     req["Content-Type"] = "application/json"
     req["Max-Forwards"] = max_forwards
 <BLANKLINE>
@@ -197,9 +225,15 @@ properIndent indent =
 initialize :: Int -> [Text]
 initialize indent =
   properIndent indent
-    [ Just "def initialize(origin)"
+    [ Just "def initialize(origin, timeout = nil)"
     , Just "  @origin = URI(origin)"
     , Just "  @http = Net::HTTP.new(@origin.host, @origin.port)"
+    , Nothing
+    , Just "  unless timeout.nil?"
+    , Just "    @http.open_timeout = timeout"
+    , Just "    @http.read_timeout = timeout"
+    , Just "  end"
+    , Just "  @http.use_ssl = @origin.scheme == 'https'"
     , Just "end"
     ]
 
@@ -207,10 +241,18 @@ public :: Int -> Req NoContent -> [Text]
 public indent req =
   properIndent indent $
     [ Nothing
-    , Just $ "def " <> functionName <> "(" <> argsStr <> ")"
-    , Just $ "  uri = URI(" <> url <> ")"
+    , Just $ "def " <> functionName <> "_uri(" <> argsStr <> ")"
+    ]
+    ++ cleanCaptures
+    ++
+    [ Just $ "  URI(" <> url <> ")"
+    , Just "end"
     , Nothing
-    , Just $ "  req = Net::HTTP::" <> method <> ".new(uri)"
+    , Just $ "def " <> functionName <> "(" <> allArgsStr <> ")"
+    ]
+    ++ cleanCaptures
+    ++
+    [ Just $ "  req = Net::HTTP::" <> method <> ".new(" <> functionName <> "_uri(" <> callArgsStr <> "))"
     ]
     ++ requestHeaders
     ++
@@ -222,15 +264,44 @@ public indent req =
   functionName :: Text
   functionName = req ^. reqFuncName.snakeCaseL.to snake
 
+  cleanCaptures  :: [Maybe Text]
+  cleanCaptures =
+    case captures of
+      [] -> []
+      xs ->
+        (Just . (<>) "  " . cleanCapture . snake <$> xs)
+        ++ [ Nothing ]
+
+  cleanCapture  :: Text -> Text
+  cleanCapture c =
+    T.concat
+      [ c
+      , " = if "
+      , c
+      , ".kind_of?(Array) then "
+      , c
+      , ".join(',') else "
+      , c
+      , " end"
+      ]
+
   argsStr  :: Text
-  argsStr = T.intercalate ", " $ snake <$> args
+  argsStr = T.intercalate ", " args
+
+  callArgsStr  :: Text
+  callArgsStr = T.intercalate ", " callArgs
+
+  callArgs :: [Text]
+  callArgs = captures ++ (paramToCallArg <$> queryparams)
+
+  allArgsStr  :: Text
+  allArgsStr = T.intercalate ", " (args ++ bodyAndHeader)
 
   args :: [Text]
-  args =
-    captures
-    ++ ((^. queryArgName.argPath) <$> queryparams)
-    ++ body
-    ++ headerArgs
+  args = captures ++ (paramToArg <$> queryparams)
+
+  bodyAndHeader :: [Text]
+  bodyAndHeader = snake <$> (body ++ headerArgs)
 
   segments :: [Segment NoContent]
   segments = filter isCapture paths
@@ -241,7 +312,7 @@ public indent req =
   queryparams = req ^.. reqUrl.queryStr.traverse
 
   captures :: [Text]
-  captures = view argPath . captureArg <$> segments
+  captures = fmap snake $ view argPath . captureArg <$> segments
 
   body :: [Text]
   body =
@@ -318,11 +389,29 @@ paramToStr :: QueryArg f -> Text
 paramToStr qarg =
   case qarg ^. queryArgType of
     Normal -> key <> "=#{" <> val <> "}"
-    Flag   -> key
-    List   -> key <> "[]=#{" <> val <> "}"
+    Flag   -> "#{" <> snake key <> " ? '" <> key <> "' : ''}"
+    List   -> "#{ " <> val <> ".collect { |x| '" <> key <> "[]=' + x.to_s }.join('&') }"
   where
   key = qarg ^. queryArgName.argName._PathSegment
   val = snake key
+
+paramToArg :: QueryArg f -> Text
+paramToArg qarg =
+  case qarg ^. queryArgType of
+    Normal -> snake name
+    Flag   -> snake name <> ": false"
+    List   -> snake name
+  where
+  name = qarg ^. queryArgName.argPath
+
+paramToCallArg :: QueryArg f -> Text
+paramToCallArg qarg =
+  case qarg ^. queryArgType of
+    Normal -> snake name
+    Flag   -> snake name <> ": " <> snake name
+    List   -> snake name
+  where
+  name = qarg ^. queryArgName.argPath
 
 snake :: Text -> Text
 snake = T.pack . quietSnake . T.unpack
