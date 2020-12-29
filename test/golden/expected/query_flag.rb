@@ -16,12 +16,12 @@ module Generated
         @http.use_ssl = @origin.scheme == 'https'
       end
 
-      def get_uri(beetle)
+      def get_uri(beetle: false)
         URI("#{@origin}?#{beetle ? 'beetle' : ''}")
       end
 
-      def get(beetle)
-        req = Net::HTTP::Get.new(get_uri(beetle))
+      def get(beetle: false)
+        req = Net::HTTP::Get.new(get_uri(beetle: beetle))
 
         @http.request(req)
       end
